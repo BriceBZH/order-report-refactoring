@@ -1,7 +1,7 @@
 <?php
 
 require_once 'readFiles.php';
-require_once 'models/config.php';
+require_once 'config/config.php';
 
 // Fonction principale qui fait TOUT (250+ lignes)
 function run()
@@ -46,7 +46,7 @@ function run()
 
         // Récupération produit avec fallback
         $prod = $products[$o->getProductId()] ?? [];
-        $basePrice = $prod->getPrice() ?? $o['unit_price'];
+        $basePrice = $prod->getPrice() ?? $o->getUnitPrice();
 
         // Application promo (logique complexe et bugguée)
         $promoCode = $o->getPromoCode();
@@ -181,7 +181,7 @@ function run()
             foreach ($totalsByCustomer[$cid]['items'] as $item) {
                 $prod = $products[$item->getProductId()] ?? null;
                 if ($prod && ($prod->getTaxable() ?? true) !== false) {
-                    $itemTotal = $item['qty'] * ($prod->getPrice() ?? $item['unit_price']);
+                    $itemTotal = $item['qty'] * ($prod->getPrice() ?? $o->getUnitPrice());
                     $tax += $itemTotal * Config::TAX;
                 }
             }
@@ -194,10 +194,10 @@ function run()
 
         if ($sub < Config::SHIPPING_LIMIT) {
             $shipZone = $shippingZones[$zone] ?? ['base' => 5.0, 'per_kg' => 0.5];
-            $baseShip = $shipZone['base'];
+            $baseShip = $shipZone->getBase();
 
             if ($weight > 10) {
-                $ship = $baseShip + ($weight - 10) * $shipZone['per_kg'];
+                $ship = $baseShip + ($weight - 10) * $shipZone->getPerKg();
             } elseif ($weight > 5) {
                 // Palier intermédiaire (règle cachée)
                 $ship = $baseShip + ($weight - 5) * 0.3;

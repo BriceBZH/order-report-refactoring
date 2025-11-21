@@ -30,7 +30,7 @@ class Order
         return $this->weight;
     }
 
-    public function getDate() : bool {
+    public function getDate() : string {
         return $this->date;
     }
 

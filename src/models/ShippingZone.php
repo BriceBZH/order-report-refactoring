@@ -10,8 +10,8 @@ class ShippingZone
         return $this->zone;
     }
 
-    public function getBase() : float {
-        return $this->type;
+    public function getBase() : ?float {
+        return $this->base;
     }
 
     public function getPerKg() : float {
