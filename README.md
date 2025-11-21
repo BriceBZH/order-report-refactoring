@@ -78,10 +78,8 @@ Expliquez vos **décisions principales** :
 ## Limites et Améliorations Futures
 
 ### Ce qui n'a pas été fait (par manque de temps)
-- [Extraction des différents calculs de remises] [Amélioration souhaitée]
 - [Extraction des calculs de frais de port] [Amélioration souhaitée]
 - [Extraction des calculs de taxes] [Amélioration souhaitée]
-- [Extraction des calculs du weekend] [Amélioration souhaitée]
 - [Extraction de la partie formatage] [Amélioration souhaitée]
 - [Gérer les nombres magiques] [Amélioration souhaitée]
 - [La duplication du calcul sur les points de fidélité] [Amélioration souhaitée]
