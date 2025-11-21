@@ -1,15 +1,7 @@
 <?php
 
 require_once 'readFiles.php';
-
-// Constantes globales mal organisées
-define('TAX', 0.2);
-define('SHIPPING_LIMIT', 50);
-define('SHIP', 5.0);
-define('PREMIUM_THRESHOLD', 1000);
-define('LOYALTY_RATIO', 0.01);
-define('HANDLING_FEE', 2.5);
-define('MAX_DISCOUNT', 200);
+require_once 'models/config.php';
 
 // Fonction principale qui fait TOUT (250+ lignes)
 function run()
@@ -44,7 +36,7 @@ function run()
             $loyaltyPoints[$cid] = 0;
         }
         // Calcul basé sur prix commande
-        $loyaltyPoints[$cid] += $o->getQty() * $o->getUnitPrice() * LOYALTY_RATIO;
+        $loyaltyPoints[$cid] += $o->getQty() * $o->getUnitPrice() * Config::LOYALTY_RATIO;
     }
 
     // Groupement par client (logique métier mélangée)
@@ -160,10 +152,10 @@ function run()
 
         // Plafond remise global (règle cachée)
         $totalDiscount = $disc + $loyaltyDiscount;
-        if ($totalDiscount > MAX_DISCOUNT) {
-            $totalDiscount = MAX_DISCOUNT;
+        if ($totalDiscount > Config::MAX_DISCOUNT) {
+            $totalDiscount = Config::MAX_DISCOUNT;
             // Ajustement proportionnel (logique complexe)
-            $ratio = MAX_DISCOUNT / ($disc + $loyaltyDiscount);
+            $ratio = Config::MAX_DISCOUNT / ($disc + $loyaltyDiscount);
             $disc = $disc * $ratio;
             $loyaltyDiscount = $loyaltyDiscount * $ratio;
         }
@@ -183,14 +175,14 @@ function run()
         }
 
         if ($allTaxable) {
-            $tax = round($taxable * TAX, 2); // Arrondi 2 décimales
+            $tax = round($taxable * Config::TAX, 2); // Arrondi 2 décimales
         } else {
             // Calcul taxe par ligne (plus complexe)
             foreach ($totalsByCustomer[$cid]['items'] as $item) {
                 $prod = $products[$item->getProductId()] ?? null;
                 if ($prod && ($prod->getTaxable() ?? true) !== false) {
                     $itemTotal = $item['qty'] * ($prod->getPrice() ?? $item['unit_price']);
-                    $tax += $itemTotal * TAX;
+                    $tax += $itemTotal * Config::TAX;
                 }
             }
             $tax = round($tax, 2);
@@ -200,7 +192,7 @@ function run()
         $ship = 0.0;
         $weight = $totalsByCustomer[$cid]['weight'];
 
-        if ($sub < SHIPPING_LIMIT) {
+        if ($sub < Config::SHIPPING_LIMIT) {
             $shipZone = $shippingZones[$zone] ?? ['base' => 5.0, 'per_kg' => 0.5];
             $baseShip = $shipZone['base'];
 
@@ -228,10 +220,10 @@ function run()
         $handling = 0.0;
         $itemCount = count($totalsByCustomer[$cid]['items']);
         if ($itemCount > 10) {
-            $handling = HANDLING_FEE;
+            $handling = Config::HANDLING_FEE;
         }
         if ($itemCount > 20) {
-            $handling = HANDLING_FEE * 2; // double pour grosses commandes
+            $handling = Config::HANDLING_FEE * 2; // double pour grosses commandes
         }
 
         // Conversion devise (règle cachée pour non-EUR)
