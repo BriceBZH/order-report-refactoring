@@ -1,8 +1,5 @@
 <?php
 
-// $outputLegacy = '';
-// $outputRefact = '';
-
 function runLegacy() {
     exec('php ../legacy/orderReportLegacy.php', $lines);
     $outputLegacy = implode("\n", $lines);

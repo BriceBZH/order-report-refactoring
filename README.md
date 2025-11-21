@@ -77,21 +77,18 @@ Expliquez vos **décisions principales** :
 
 ## Limites et Améliorations Futures
 
-### Erreurs survenues après le refactoring
-
-Suite au passage à l'utilisation d'entité (plus exactement Order), plusieurs erreurs de montant sont apparues, debug commencé mais code trop inconnue/mal rangé pour découvrir le problème... 
-
 ### Ce qui n'a pas été fait (par manque de temps)
 - [Extraction des différents calculs de remises] [Amélioration souhaitée]
 - [Extraction des calculs de frais de port] [Amélioration souhaitée]
 - [Extraction des calculs de taxes] [Amélioration souhaitée]
 - [Extraction des calculs du weekend] [Amélioration souhaitée]
 - [Extraction de la partie formatage] [Amélioration souhaitée]
+- [Gérer les nombres magiques] [Amélioration souhaitée]
+- [La duplication du calcul sur les points de fidélité] [Amélioration souhaitée]
 
 ### Compromis Assumés
 - [Compromis 1] : [justification]
 - [Compromis 2] : [justification]
 
 ### Pistes d'Amélioration Future
-- [Idée 1]
-- [Idée 2]
+- [Idée 1] : Passer le fichier readFiles.php en classe, ça serait plus facilement réutilisable

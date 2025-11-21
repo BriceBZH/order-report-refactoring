@@ -1,6 +1,7 @@
 <?php
 
 require_once 'readFiles.php';
+require_once 'discountCalculator.php';
 require_once 'config/config.php';
 
 // Fonction principale qui fait TOUT (250+ lignes)
@@ -112,56 +113,23 @@ function run()
 
         $sub = $totalsByCustomer[$cid]['subtotal'];
 
-        // Remise par paliers (duplication + magic numbers)
-        $disc = 0.0;
-        if ($sub > 50) {
-            $disc = $sub * 0.05;
-        }
-        if ($sub > 100) {
-            $disc = $sub * 0.10; // écrase la précédente (bug intentionnel)
-        }
-        if ($sub > 500) {
-            $disc = $sub * 0.15;
-        }
-        if ($sub > 1000 && $level === 'PREMIUM') {
-            $disc = $sub * 0.20;
-        }
+        // Remise par paliers
+        $discountCalculator = new DiscountCalculator();
+        $disc = $discountCalculator->discountStage($sub, $level);
 
         // Bonus weekend (règle cachée basée sur date)
         $firstOrderDate = $totalsByCustomer[$cid]['items'][0]->getDate() ?? '';
-        $dayOfWeek = 0;
-        if (!empty($firstOrderDate)) {
-            $timestamp = strtotime($firstOrderDate);
-            if ($timestamp !== false) {
-                $dayOfWeek = intval(date('w', $timestamp));
-            }
-        }
-        if ($dayOfWeek === 0 || $dayOfWeek === 6) {
-            $disc = $disc * 1.05; // 5% bonus sur remise
-        }
+        $disc = $discountCalculator->discountWeekend($firstOrderDate, $disc);
 
         // Calcul remise fidélité (duplication)
-        $loyaltyDiscount = 0.0;
         $pts = $loyaltyPoints[$cid] ?? 0;
-        if ($pts > 100) {
-            $loyaltyDiscount = min($pts * 0.1, 50.0);
-        }
-        if ($pts > 500) {
-            $loyaltyDiscount = min($pts * 0.15, 100.0); // écrase précédent
-        }
+        $loyaltyDiscount = $discountCalculator->discountFidelity($pts);
 
         // Plafond remise global (règle cachée)
-        $totalDiscount = $disc + $loyaltyDiscount;
-        if ($totalDiscount > Config::MAX_DISCOUNT) {
-            $totalDiscount = Config::MAX_DISCOUNT;
-            // Ajustement proportionnel (logique complexe)
-            $ratio = Config::MAX_DISCOUNT / ($disc + $loyaltyDiscount);
-            $disc = $disc * $ratio;
-            $loyaltyDiscount = $loyaltyDiscount * $ratio;
-        }
+        $finalDiscount = $discountCalculator->maxDiscount(Config::MAX_DISCOUNT, $disc, $loyaltyDiscount);
 
         // Calcul taxe (gestion spéciale par produit)
-        $taxable = $sub - $totalDiscount;
+        $taxable = $sub - $finalDiscount['totalDiscount'];
         $tax = 0.0;
 
         // Vérifier si tous produits taxables
@@ -242,9 +210,9 @@ function run()
         $outputLines[] = sprintf('Customer: %s (%s)', $name, $cid);
         $outputLines[] = sprintf('Level: %s | Zone: %s | Currency: %s', $level, $zone, $currency);
         $outputLines[] = sprintf('Subtotal: %.2f', $sub);
-        $outputLines[] = sprintf('Discount: %.2f', $totalDiscount);
-        $outputLines[] = sprintf('  - Volume discount: %.2f', $disc);
-        $outputLines[] = sprintf('  - Loyalty discount: %.2f', $loyaltyDiscount);
+        $outputLines[] = sprintf('Discount: %.2f', $finalDiscount['totalDiscount']);
+        $outputLines[] = sprintf('  - Volume discount: %.2f', $finalDiscount['disc']);
+        $outputLines[] = sprintf('  - Loyalty discount: %.2f', $finalDiscount['loyaltyDiscount']);
         if ($totalsByCustomer[$cid]['morningBonus'] > 0) {
             $outputLines[] = sprintf('  - Morning bonus: %.2f', $totalsByCustomer[$cid]['morningBonus']);
         }
