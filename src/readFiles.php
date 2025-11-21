@@ -1,5 +1,11 @@
 <?php
 
+require_once 'models/customer.php';
+require_once 'models/product.php';
+require_once 'models/promotion.php';
+require_once 'models/shippingZone.php';
+require_once 'models/order.php';
+
 //lecture csv + parsing
 function readCsv(string $path) : array {
     $result = [];
@@ -17,13 +23,10 @@ function readCustomers(string $path) : array {
     $lines = readCsv($path);
     $customers = [];
     foreach($lines as $row) {
-        $customers[$row[0]] = [
-            'id' => $row[0],
-            'name' => $row[1],
-            'level' => $row[2] ?? 'BASIC',
-            'shipping_zone' => $row[3] ?? 'ZONE1',
-            'currency' => $row[4] ?? 'EUR'
-        ];
+        $level = $row[2] ?? 'BASIC';
+        $currency = $row[4] ?? 'EUR';
+        $shippingZone = $row[3] ?? 'ZONE1';
+        $customers[$row[0]] = new Customer($row[0], $row[1], $level, $shippingZone, $currency);
     }
     return $customers;
 }
@@ -32,14 +35,9 @@ function readProducts(string $path) : array {
     $lines = readCsv($path);
     $products = [];
     foreach($lines as $row) {
-        $products[$row[0]] = [
-            'id' => $row[0],
-            'name' => $row[1],
-            'category' => $row[2],
-            'price' => floatval($row[3]),
-            'weight' => floatval($row[4] ?? 1.0),
-            'taxable' => ($row[5] ?? 'true') === 'true'
-        ];
+        $weight = floatval($row[4] ?? 1.0);
+        $taxable = ($row[5] ?? 'true') === 'true';
+        $products[$row[0]] = new Product($row[0], $row[1], $row[2], floatval($row[3]), $weight, $taxable);
     }
     return $products;
 }
@@ -48,11 +46,8 @@ function readShippingZones(string $path) : array {
     $lines = readCsv($path);
     $shippingZones = [];
     foreach($lines as $row) {
-        $shippingZones[$row[0]] = [
-            'zone' => $row[0],
-            'base' => floatval($row[1]),
-            'per_kg' => floatval($row[2] ?? 0.5)
-        ];
+        $perKg = floatval($row[2] ?? 0.5);
+        $shippingZones[$row[0]] = new ShippingZone($row[0], floatval($row[1]), $perKg);
     }
     return $shippingZones;
 }
@@ -61,12 +56,8 @@ function readPromotions(string $path) : array {
     $lines = readCsv($path);
     $promotions = [];
     foreach($lines as $row) {
-        $promotions[$row[0]] = [
-            'code' => $row[0],
-            'type' => $row[1],
-            'value' => $row[2],
-            'active' => ($row[3] ?? 'true') !== 'false'
-        ];
+        $active = ($row[3] ?? 'true') !== 'false';
+        $promotions[$row[0]] = new Promotion($row[0], $row[1], $row[2], $active);
     }
     return $promotions;
 }
@@ -81,17 +72,11 @@ function readOrders(string $path) : array {
         if ($qty <= 0 || $price < 0) {
             continue; // validation silencieuse
         }
-
-        $orders[] = [
-            'id' => $row[0],
-            'customer_id' => $row[1],
-            'product_id' => $row[2],
-            'qty' => $qty,
-            'unit_price' => $price,
-            'date' => $row[5] ?? '',
-            'promo_code' => $row[6] ?? '',
-            'time' => $row[7] ?? '12:00'
-        ];
+        $date = $row[5] ?? '';
+        $promoCode = $row[6] ?? '';
+        $time = $row[7] ?? '12:00';
+        $customerId = $row[1];
+        $orders[] = new Order($row[0], $customerId, $row[2], $qty, $price, $date, $promoCode, $time);
     }
     return $orders;
 }

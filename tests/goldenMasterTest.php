@@ -14,6 +14,7 @@ function runLegacy() {
 function runRefact() {
     exec('php ../src/orderReportLegacy.php', $lines);
     $outputRefact = implode("\n", $lines);
+    file_put_contents('../src/expected/report.txt', $outputRefact);
 
     return $outputRefact;
 }
